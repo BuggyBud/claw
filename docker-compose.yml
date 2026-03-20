@@ -58,6 +58,10 @@ services:
     volumes:
       - ./config:/home/node/.openclaw
       - ./workspace:/home/node/.openclaw/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/local/bin/docker:/usr/local/bin/docker:ro
+    group_add:
+      - "0"
     stdin_open: true
     tty: true
     init: true
