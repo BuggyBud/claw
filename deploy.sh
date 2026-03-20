@@ -39,6 +39,12 @@ sshpass -p "$NAS_PASS" ssh -o StrictHostKeyChecking=no "$NAS_USER@$NAS_HOST" \
   && ok "repo updated on NAS" \
   || fail "git pull on NAS failed"
 
+# copy docker-compose.yml from repo to deploy dir
+sshpass -p "$NAS_PASS" ssh -o StrictHostKeyChecking=no "$NAS_USER@$NAS_HOST" \
+  "cp $NAS_DIR/repo/docker-compose.yml $NAS_DIR/docker-compose.yml" \
+  && ok "docker-compose.yml updated from repo" \
+  || fail "failed to copy docker-compose.yml"
+
 # 4. Restart openclaw-gateway
 step 4 "restart openclaw-gateway"
 sshpass -p "$NAS_PASS" ssh -o StrictHostKeyChecking=no "$NAS_USER@$NAS_HOST" \
