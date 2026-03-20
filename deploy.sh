@@ -45,6 +45,12 @@ sshpass -p "$NAS_PASS" ssh -o StrictHostKeyChecking=no "$NAS_USER@$NAS_HOST" \
   && ok "docker-compose.yml updated from repo" \
   || fail "failed to copy docker-compose.yml"
 
+# ensure required dirs exist on NAS
+sshpass -p "$NAS_PASS" ssh -o StrictHostKeyChecking=no "$NAS_USER@$NAS_HOST" \
+  "mkdir -p $NAS_DIR/config $NAS_DIR/workspace" \
+  && ok "config and workspace dirs ready" \
+  || fail "failed to create dirs"
+
 # 4. Restart openclaw-gateway
 step 4 "restart openclaw-gateway"
 sshpass -p "$NAS_PASS" ssh -o StrictHostKeyChecking=no "$NAS_USER@$NAS_HOST" \
