@@ -39,12 +39,12 @@ sshpass -p "$NAS_PASS" ssh -o StrictHostKeyChecking=no "$NAS_USER@$NAS_HOST" \
   && ok "repo updated on NAS" \
   || fail "git pull on NAS failed"
 
-# 4. Restart openclaw container
-step 4 "restart openclaw"
+# 4. Restart openclaw-gateway
+step 4 "restart openclaw-gateway"
 sshpass -p "$NAS_PASS" ssh -o StrictHostKeyChecking=no "$NAS_USER@$NAS_HOST" \
-  "echo '$NAS_PASS' | sudo -S $DOCKER-compose -f $NAS_DIR/docker-compose.yml up -d --force-recreate openclaw 2>&1" \
-  && ok "openclaw restarted" \
+  "echo '$NAS_PASS' | sudo -S $DOCKER-compose -f $NAS_DIR/docker-compose.yml up -d --force-recreate openclaw-gateway 2>&1" \
+  && ok "openclaw-gateway restarted" \
   || fail "docker-compose restart failed"
 
 echo
-log "deploy complete → http://$NAS_HOST:3000"
+log "deploy complete → http://$NAS_HOST:18789"

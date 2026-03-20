@@ -1,12 +1,10 @@
 # claw — OpenClaw NAS Deployment
 
-OpenClaw agent running on Synology NAS with Postgres + Redis.
+Self-hosted [OpenClaw](https://openclaw.ai) gateway on Synology NAS — connects chat apps (Telegram, Discord, Slack, WhatsApp) to AI coding agents.
 
 ## Stack
 
-- `openclawai/openclaw:latest` — agent core
-- `postgres:15` — state/tasks
-- `redis:7` — memory/cache
+- `ghcr.io/openclaw/openclaw:latest` — gateway + CLI
 - LLM via [OpenRouter](https://openrouter.ai)
 
 ---
@@ -14,25 +12,19 @@ OpenClaw agent running on Synology NAS with Postgres + Redis.
 ## Local Setup
 
 ```bash
-# credentials (not committed to git)
-cp .secret .env   # or generate manually — see .env format below
+# credentials (not committed to git — kept in .secret)
+# .env is generated from .secret and auto-synced to NAS by deploy.sh
 ```
 
-`.env` format:
+`.env` vars:
 
 ```env
+OPENCLAW_IMAGE=ghcr.io/openclaw/openclaw:latest
+OPENCLAW_GATEWAY_TOKEN=<long-random-token>
+OPENCLAW_GATEWAY_BIND=lan
+OPENCLAW_TZ=Asia/Shanghai
 OPENROUTER_API_KEY=...
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-NODE_ENV=production
-PORT=3000
-POSTGRES_USER=openclaw
-POSTGRES_PASSWORD=...
-POSTGRES_DB=openclaw
-REDIS_URL=redis://redis:6379
-TWITTER_API_KEY=...
-TWITTER_API_SECRET=...
-TWITTER_ACCESS_TOKEN=...
-TWITTER_ACCESS_SECRET=...
 ```
 
 ---
@@ -60,7 +52,7 @@ This will:
 1. `git push origin main`
 2. Sync `.env` to NAS (never committed to git)
 3. Pull latest on NAS (`192.168.50.184`) via git container
-4. Restart the `openclaw` container
+4. Restart the `openclaw-gateway` container
 
 ---
 
@@ -84,16 +76,16 @@ Stop all services:
 echo 'zell@521' | sudo -S /usr/local/bin/docker-compose -f /volume1/docker/openclaw/docker-compose.yml down
 ```
 
-View openclaw logs:
+View gateway logs:
 
 ```bash
-echo 'zell@521' | sudo -S /usr/local/bin/docker logs -f openclaw
+echo 'zell@521' | sudo -S /usr/local/bin/docker logs -f openclaw-gateway
 ```
 
-Pull latest and restart (manual deploy):
+Run CLI (onboarding, config):
 
 ```bash
-echo 'zell@521' | sudo -S /volume1/docker/openclaw/deploy.sh
+echo 'zell@521' | sudo -S /usr/local/bin/docker-compose -f /volume1/docker/openclaw/docker-compose.yml run --rm openclaw-cli
 ```
 
 ---
@@ -101,5 +93,9 @@ echo 'zell@521' | sudo -S /volume1/docker/openclaw/deploy.sh
 ## Access
 
 ```
-http://192.168.50.184:3000
+http://192.168.50.184:18789
 ```
+
+Health checks (no auth required):
+- `http://192.168.50.184:18789/healthz`
+- `http://192.168.50.184:18789/readyz`

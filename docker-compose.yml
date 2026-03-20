@@ -1,34 +1,66 @@
-version: "3.9"
-
 services:
-  openclaw:
-    image: openclawai/openclaw:latest
-    container_name: openclaw
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    depends_on:
-      - postgres
-      - redis
-    volumes:
-      - ./data:/app/data
-
-  postgres:
-    image: postgres:15
-    container_name: openclaw_postgres
+  openclaw-gateway:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    container_name: openclaw-gateway
     restart: unless-stopped
     environment:
-      POSTGRES_USER: openclaw
-      POSTGRES_PASSWORD: openclaw2024
-      POSTGRES_DB: openclaw
+      HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      TZ: ${OPENCLAW_TZ:-UTC}
     volumes:
-      - ./postgres:/var/lib/postgresql/data
+      - ./config:/home/node/.openclaw
+      - ./workspace:/home/node/.openclaw/workspace
+    ports:
+      - "18789:18789"
+      - "18790:18790"
+    init: true
+    command:
+      [
+        "node",
+        "dist/index.js",
+        "gateway",
+        "--bind",
+        "${OPENCLAW_GATEWAY_BIND:-lan}",
+        "--port",
+        "18789",
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
-  redis:
-    image: redis:7
-    container_name: openclaw_redis
-    restart: unless-stopped
+  openclaw-cli:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    container_name: openclaw-cli
+    network_mode: "service:openclaw-gateway"
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      BROWSER: echo
+      TZ: ${OPENCLAW_TZ:-UTC}
     volumes:
-      - ./redis:/data
+      - ./config:/home/node/.openclaw
+      - ./workspace:/home/node/.openclaw/workspace
+    stdin_open: true
+    tty: true
+    init: true
+    entrypoint: ["node", "dist/index.js"]
+    depends_on:
+      - openclaw-gateway
