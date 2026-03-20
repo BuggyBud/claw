@@ -35,7 +35,7 @@ sshpass -p "$NAS_PASS" ssh -o StrictHostKeyChecking=no "$NAS_USER@$NAS_HOST" \
     -v /var/services/homes/$NAS_USER/.ssh:/root/.ssh:ro \
     -v $NAS_DIR/repo:/repo \
     -w /repo \
-    alpine/git pull 2>&1" \
+    alpine/git -c safe.directory=/repo pull 2>&1" \
   && ok "repo updated on NAS" \
   || fail "git pull on NAS failed"
 
