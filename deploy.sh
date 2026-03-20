@@ -8,9 +8,8 @@ NAS_PASS="zell@521"
 NAS_DIR=/volume1/docker/openclaw
 DOCKER=/usr/local/bin/docker
 
-# force password auth — prevents SSH from trying all keys and hitting MaxAuthTries
-SSH_OPTS="-o StrictHostKeyChecking=no -o PreferredAuthentications=password -o IdentitiesOnly=yes"
-nas() { sshpass -p "$NAS_PASS" ssh $SSH_OPTS "$NAS_USER@$NAS_HOST" "$@"; }
+SSH_OPTS="-o StrictHostKeyChecking=no -o IdentityFile=$HOME/.ssh/id_ed25519 -o IdentitiesOnly=yes"
+nas() { ssh $SSH_OPTS "$NAS_USER@$NAS_HOST" "$@"; }
 
 STEPS=4
 log()  { echo "[$(date '+%H:%M:%S')] $1"; }
